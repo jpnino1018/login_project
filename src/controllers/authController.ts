@@ -3,6 +3,7 @@ import crypto from "crypto";
 import jwt from 'jsonwebtoken';
 import { Request, Response } from "express";
 const SECRET_KEY = 'amociber';
+import { hashPassword } from "../utils/password";
 
 import {
   getUserByUsername,
@@ -14,13 +15,6 @@ import {
   resetPassword,
   getLastLogin
 } from "../models/user";
-
-// Helper function for PBKDF2 hashing
-const hashPassword = (password: string): string => {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hashedPassword = bcrypt.hashSync(password + salt, 10);
-  return `${salt}:${hashedPassword}`;
-};
 
 export const registerUser = async (req: Request, res: Response): Promise<any> => {
   const { username, password } = req.body;
