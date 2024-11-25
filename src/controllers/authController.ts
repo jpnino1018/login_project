@@ -36,7 +36,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
 export const loginUser = async (req: Request, res: Response): Promise<any> => {
   const { username, password } = req.body;
   try{
-    if (!username || !password) {
+    if (!username) {
      return res.status(400).json({ error: 'Username and password are required.' });
     }
     const user = await getUserByUsername(username);
@@ -44,11 +44,15 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
       return res.status(404).json({ error: "User not found" });
     }
 
-    const [salt, hashedPassword] = user.password.split(":");
-    const isPasswordValid = bcrypt.compareSync(password + salt, hashedPassword);
+    if (!user.password && !password){
+      
+    } else {
+      const [salt, hashedPassword] = user.password.split(":");
+      const isPasswordValid = bcrypt.compareSync(password + salt, hashedPassword);
 
-    if (!isPasswordValid) {
-      return res.status(401).json({ error: 'Invalid credentials.' });
+      if (!isPasswordValid) {
+        return res.status(401).json({ error: 'Invalid credentials.' });
+      }
     }
 
     const token = jwt.sign(
@@ -121,9 +125,16 @@ export const resetPasswordController = async (req: Request, res: Response): Prom
 
 export const getLastLoginController = async (req: Request, res: Response): Promise<void> => {
   try {
-    const username = req.body.username; // O extraer de la sesión/token
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      res.status(401).json({ message: "Token is missing or invalid" });
+      return;
+    }
+
+    const decoded = jwt.verify(token, SECRET_KEY) as { username: string };
+    const username = decoded.username;
     const lastLogin = await getLastLogin(username);
-    res.status(200).json({ last_login: lastLogin });
+    res.status(200).json({ message: "Retrieved date", lastLogin });
   } catch (error) {
     res.status(500).json({ message: "Error retrieving last login" });
   }
